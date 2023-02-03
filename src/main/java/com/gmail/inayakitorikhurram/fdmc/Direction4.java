@@ -4,12 +4,12 @@ import net.minecraft.util.StringIdentifiable;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.*;
 import net.minecraft.util.math.Direction.AxisDirection;
-import net.minecraft.util.math.random.Random;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.Random;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 

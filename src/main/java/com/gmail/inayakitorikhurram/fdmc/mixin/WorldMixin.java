@@ -4,10 +4,6 @@ import com.gmail.inayakitorikhurram.fdmc.Direction4;
 import com.gmail.inayakitorikhurram.fdmc.mixininterfaces.*;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.WorldAccess;
-import net.minecraft.world.block.NeighborUpdater;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -15,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(net.minecraft.world.World.class)
-public abstract class WorldMixin implements WorldAccessI, AutoCloseable, HasNeighbourUpdater, WorldViewI, WorldI {
+public abstract class WorldMixin implements WorldAccessI, AutoCloseable, WorldViewI, WorldI {
 
     @Inject(method = "getReceivedStrongRedstonePower", at = @At("TAIL"), cancellable = true)
     public void getReceivedStrongRedstonePower(BlockPos pos, CallbackInfoReturnable<Integer> cir) {
@@ -89,11 +85,4 @@ public abstract class WorldMixin implements WorldAccessI, AutoCloseable, HasNeig
 
     @Shadow
     public abstract BlockState getBlockState(BlockPos pos);
-
-    @Shadow @Final protected NeighborUpdater neighborUpdater;
-
-    @Override
-    public NeighborUpdater getNeighbourUpdater() {
-        return neighborUpdater;
-    }
 }

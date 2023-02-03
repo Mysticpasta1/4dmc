@@ -1,7 +1,9 @@
 package com.gmail.inayakitorikhurram.fdmc.mixin;
 
 import com.gmail.inayakitorikhurram.fdmc.FDMCMath;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.network.ServerPlayerInteractionManager;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3d;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Final;
@@ -15,14 +17,16 @@ public abstract class ServerPlayerInteractionManagerMixin {
 
     @Shadow @Final private static Logger LOGGER;
 
+    @Shadow @Final protected ServerPlayerEntity player;
+
     @Redirect(method = "processBlockBreakingAction", at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/util/math/Vec3d;squaredDistanceTo(Lnet/minecraft/util/math/Vec3d;)D"
+            target = "Lnet/minecraft/util/math/ChunkPos;getChebyshevDistance(Lnet/minecraft/util/math/ChunkPos;)I"
     ))
-    private double squaredDistanceInjection(Vec3d playerEyePos, Vec3d blockPos){
+    private double squaredDistanceInjection(ChunkPos instance, ChunkPos pos){
 
-        double[] playerEyePos4 = FDMCMath.toPos4(playerEyePos);
-        double[] blockPos4 = FDMCMath.toPos4(blockPos);
+        double[] playerEyePos4 = FDMCMath.toPos4(player.getEyePos());
+        double[] blockPos4 = FDMCMath.toPos4(Vec3d.ofCenter(player.getBlockPos()));
 
         double[] diff = new double[]{
                 playerEyePos4[0] - blockPos4[0],
@@ -38,9 +42,9 @@ public abstract class ServerPlayerInteractionManagerMixin {
                 diff[3] * diff[3] ;
 
         if(diffSquared > 36){
-            LOGGER.info("fdmc: block {} ({}) is too far away from {} ({}) at rt({})m", blockPos, blockPos4, playerEyePos, playerEyePos4, diffSquared);
+            LOGGER.info("fdmc: block {} ({}) is too far away from {} ({}) at rt({})m", player.getBlockPos(), blockPos4, player.getEyePos(), playerEyePos4, diffSquared);
         } else{
-            LOGGER.info("fdmc: block {} ({}) is close enough to  {} ({}) at rt({})m", blockPos, blockPos4, playerEyePos, playerEyePos4, diffSquared);
+            LOGGER.info("fdmc: block {} ({}) is close enough to  {} ({}) at rt({})m", player.getBlockPos(), blockPos4, player.getEyePos(), playerEyePos4, diffSquared);
         }
 
         //TODO math helper
