@@ -1,77 +1,55 @@
 package com.gmail.inayakitorikhurram.fdmc;
 
 import com.gmail.inayakitorikhurram.fdmc.mixininterfaces.CanStep;
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.fabricmc.fabric.api.networking.v1.PacketSender;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.network.PacketByteBuf;
+import com.gmail.inayakitorikhurram.fdmc.networking.FDMCPacket;
+import com.gmail.inayakitorikhurram.fdmc.networking.FDMCPacketHandler;
+import com.gmail.inayakitorikhurram.fdmc.networking.FDMCPacketThree;
+import com.gmail.inayakitorikhurram.fdmc.networking.FDMCPacketTwo;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.ByteBufHolder;
+import io.netty.buffer.ByteBufUtil;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.Vec3d;
-import org.lwjgl.glfw.GLFW;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.InputEvent;
+import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
+import net.minecraftforge.fml.relauncher.Side;
+import org.lwjgl.input.Keyboard;
 
-public class FDMCClientEntrypoint implements ClientModInitializer {
+@Mod.EventBusSubscriber(modid = Reference.MODID, value = Side.CLIENT)
+public class FDMCClientEntrypoint extends FDMCCommonEntrypoint {
 
-    private static KeyBinding moveKata;
-    private static KeyBinding moveAna;
+    public static final KeyBinding move_kata = new KeyBinding(
+            "key.fdmc.moveKata", // The translation key of the keybinding's name
+            Keyboard.KEY_Q, // The keycode of the key
+            "category.fdmc.movement" // The translation key of the keybinding's category.
+    );
+
+    public static final KeyBinding move_ana = new KeyBinding(
+            "key.fdmc.moveAna", // The translation key of the keybinding's name
+            Keyboard.KEY_E, // The keycode of the key
+            "category.fdmc.movement" // The translation key of the keybinding's category.
+    );
+
     @Override
-    public void onInitializeClient() {
+    public void init() {
+        ClientRegistry.registerKeyBinding(move_kata);
+        ClientRegistry.registerKeyBinding(move_ana);
+    }
 
-        moveKata = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.fdmc.moveKata", // The translation key of the keybinding's name
-                InputUtil.Type.KEYSYM, // KEYSYM for keyboard, MOUSE for mouse.
-                GLFW.GLFW_KEY_Q, // The keycode of the key
-                KeyBinding.MOVEMENT_CATEGORY // The translation key of the keybinding's category.
-        ));
+    @SubscribeEvent
+    public static void onKeyInput(InputEvent.KeyInputEvent event) {
+        EntityPlayer player = Minecraft.getMinecraft().player;
+        int moveDirection = (move_kata.isPressed() ? -1 : 0) + (move_ana.isPressed() ? 1 : 0);
 
-
-        moveAna = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.fdmc.moveAna", // The translation key of the keybinding's name
-                InputUtil.Type.KEYSYM, // KEYSYM for keyboard, MOUSE for mouse.
-                GLFW.GLFW_KEY_E, // The keycode of the key
-                KeyBinding.MOVEMENT_CATEGORY // The translation key of the keybinding's category.
-        ));
-
-        ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            int moveDirection = (moveKata.wasPressed() ? -1 :0) +  (moveAna.wasPressed() ? 1 : 0);
-
-            if(moveDirection != 0 && client.player != null && ((CanStep)client.player).canStep(moveDirection)){
-                PacketByteBuf buf = PacketByteBufs.create();
-                buf.writeInt(moveDirection);
-                ClientPlayNetworking.send(FDMCConstants.MOVING_PLAYER_ID, buf);
-            }
-        });
-
-        ClientPlayNetworking.registerGlobalReceiver(FDMCConstants.MOVING_PLAYER_ID, (client, handler, buf, responseSender) -> {
-            CanStep steppingPlayer =  (CanStep) client.player;
-            int serverTick = buf.readInt();
-            int stepDirection = buf.readInt();
-            if(stepDirection != 0) { //start stepping tick
-            Vec3d vel = new Vec3d(
-                    buf.readDouble(),
-                    buf.readDouble(),
-                    buf.readDouble());
-                client.execute(() -> {
-                    steppingPlayer.setSteppingLocally(serverTick, stepDirection, vel);
-                });
-            } else{
-                steppingPlayer.setSteppingLocally(serverTick ,0, null);
-            }
-        });
-
-        ClientPlayNetworking.registerGlobalReceiver(FDMCConstants.UPDATE_COLLISION_MOVEMENT, (client, handler, buf, responseSender) -> {
-            CanStep steppingPlayer =  (CanStep) client.player;
-            boolean[] pushableDirection = new boolean[6];
-            for(int i = 0; i < 6; i++) {
-                pushableDirection[i] = buf.readBoolean();
-            }
-            steppingPlayer.updatePushableDirectionsLocally(pushableDirection);
-        });
-
+        if (moveDirection != 0 && player != null && ((CanStep) player).canStep(moveDirection)) {
+            FDMCPacketHandler.INSTANCE.sendToServer(new FDMCPacketThree(moveDirection));
+        }
     }
 }

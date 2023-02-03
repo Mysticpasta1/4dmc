@@ -1,8 +1,9 @@
 package com.gmail.inayakitorikhurram.fdmc;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.state.property.Properties;
+import net.minecraft.block.BlockRedstoneWire;
+import net.minecraft.block.properties.PropertyEnum;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
 import net.minecraft.util.math.*;
 
 import static com.gmail.inayakitorikhurram.fdmc.FDMCProperties.WIRE_CONNECTION_MAP;
@@ -23,10 +24,9 @@ public class FDMCMath {
         double[] pos4 = new double[4];
 
         pos4[3] = Math.floor(0.5 + (pos3.getX()/FDMCConstants.STEP_DISTANCE) );
-        pos4[0] = pos3.getX() - pos4[3] * FDMCConstants.STEP_DISTANCE;
-        pos4[1] = pos3.getY();
-        pos4[2] = pos3.getZ();
-
+        pos4[0] = pos3.x - pos4[3] * FDMCConstants.STEP_DISTANCE;
+        pos4[1] = pos3.y;
+        pos4[2] = pos3.z;
         return pos4;
     }
 
@@ -92,11 +92,11 @@ public class FDMCMath {
         );
     }
 
-    public static int getRedstoneColorIndex(BlockState state){
-        if(!state.isOf(Blocks.REDSTONE_WIRE)) return -1;
-        int power = state.get(Properties.POWER);
-        power += state.get(WIRE_CONNECTION_MAP.get(Direction4.KATA)).isConnected() ? 1 << 4 : 0;
-        power += state.get(WIRE_CONNECTION_MAP.get(Direction4.ANA)).isConnected() ? 1 << 5 : 0;
+    public static int getRedstoneColorIndex(IBlockState state){
+        if(!state.equals(Blocks.REDSTONE_WIRE.getDefaultState())) return -1;
+        int power = state.getValue(BlockRedstoneWire.POWER);
+        power += state.getValue(WIRE_CONNECTION_MAP.get(Direction4.KATA)).isConnected() ? 1 << 4 : 0;
+        power += state.getValue(WIRE_CONNECTION_MAP.get(Direction4.ANA)).isConnected() ? 1 << 5 : 0;
         return power;
     }
 
