@@ -23,7 +23,7 @@ public abstract class ServerPlayerInteractionManagerMixin {
             value = "INVOKE",
             target = "Lnet/minecraft/util/math/ChunkPos;getChebyshevDistance(Lnet/minecraft/util/math/ChunkPos;)I"
     ))
-    private double squaredDistanceInjection(ChunkPos instance, ChunkPos pos){
+    private int squaredDistanceInjection(ChunkPos instance, ChunkPos pos){
 
         double[] playerEyePos4 = FDMCMath.toPos4(player.getEyePos());
         double[] blockPos4 = FDMCMath.toPos4(Vec3d.ofCenter(player.getBlockPos()));
@@ -48,6 +48,6 @@ public abstract class ServerPlayerInteractionManagerMixin {
         }
 
         //TODO math helper
-        return diffSquared;
+        return instance.getChebyshevDistance(pos);
     }
 }

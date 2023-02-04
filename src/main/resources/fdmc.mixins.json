@@ -8,6 +8,7 @@
     "DebugHudMixin",
     "MinecraftServerMixin",
     "SectionDistanceLevelPropagatorMixin",
+    "ServerPlayerInteractionManagerMixin",
     "ServerWorldMixin",
     "WorldMixin",
     "block.AbstractBlockMixin",
